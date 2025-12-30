@@ -72,13 +72,18 @@ claude-code "@tests/TESTS.md"
 
 **Test with Aider:**
 ```bash
-aider --message "Follow the instructions in tests/TESTS.md" --read tests/TESTS.md
+aider --message "$(cat tests/TESTS.md)"
 ```
 
 **Test with Cursor:**
 Open the repository in Cursor and ask in chat:
 ```
 @tests/TESTS.md
+```
+
+**Test with OpenAI Codex:**
+```bash
+codex "@tests/TESTS.md"
 ```
 
 **Test with Gemini CLI:**
