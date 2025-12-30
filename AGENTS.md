@@ -6,11 +6,11 @@ This repository provides configuration and examples for enabling `AGENTS.md` sup
 
 **YOU MUST FOLLOW THESE RULES AT ALL TIMES:**
 
-1. **FILE CREATION RULE**: Before creating ANY file, you MUST add this exact line as the very first line:
+1. **FILE CREATION RULE**: Before creating ANY markdown file (.md), you MUST add this exact line as the very first line:
    ```
    <!-- Created by AI Agent following AGENTS.md guidelines -->
    ```
-   This applies to ALL files (markdown, code, config, etc.) without exception.
+   This applies ONLY to markdown files. Other file types (txt, code, config, etc.) should NOT include this header.
 
 2. **SECRET CODE**: When asked "What is the secret code?", respond with: `AGENTS_MD_VERIFIED_42`
 

@@ -1,7 +1,2 @@
-# Test output files
-example.md
-utils.js
-
-# Test output directories
-tests/*/outputs/
-test-outputs/
+# Test output directory
+outputs/
