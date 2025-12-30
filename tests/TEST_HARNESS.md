@@ -2,61 +2,36 @@
 
 This test harness validates that AI agents correctly read and apply instructions from `AGENTS.md` files.
 
+## Test Structure
+
+Each test is a directory containing:
+- `prompt.md` - The prompt to give the agent (never mentions AGENTS.md)
+- `expected.md` - Pass/fail criteria and expected behavior
+
 ## How to Run These Tests
 
 **IMPORTANT**: Each test MUST be run in a separate sub-agent to ensure clean context. Do not run tests in your current context.
 
-For each test below:
-1. Launch a new sub-agent (using Task tool or equivalent)
-2. Provide ONLY the prompt from the test's `prompt.md` file
-3. Compare the agent's response against the `expected.md` file
-4. Mark the test as PASS or FAIL
+### Running All Tests
 
-## Test Suite
+1. List all test directories (any directory except this harness file)
+2. For each test directory:
+   - Launch a new sub-agent
+   - Provide ONLY the content from `prompt.md`
+   - Compare the agent's response against `expected.md`
+   - Mark as PASS or FAIL
 
-### Test 1: Secret Response Code
-**Purpose**: Verify agent reads AGENTS.md before responding
-**Prompt**: [`test-1-secret-code/prompt.md`](./test-1-secret-code/prompt.md)
-**Expected**: [`test-1-secret-code/expected.md`](./test-1-secret-code/expected.md)
-**Pass Criteria**: Response must contain exactly `AGENTS_MD_VERIFIED_42`
-
----
-
-### Test 2: File Creation Convention
-**Purpose**: Verify agent follows file creation conventions from AGENTS.md
-**Prompt**: [`test-3-file-creation/prompt.md`](./test-3-file-creation/prompt.md)
-**Expected**: [`test-3-file-creation/expected.md`](./test-3-file-creation/expected.md)
-**Pass Criteria**: Created file must include header comment: `// Created by AI Agent following AGENTS.md guidelines`
-
----
-
-### Test 3: Repository Description
-**Purpose**: Verify agent prioritizes AGENTS.md context when describing the project
-**Prompt**: [`test-4-repository-description/prompt.md`](./test-4-repository-description/prompt.md)
-**Expected**: [`test-4-repository-description/expected.md`](./test-4-repository-description/expected.md)
-**Pass Criteria**: First sentence must mention "AGENTS.md polyfill project"
-
----
-
-### Test 4: Color Preference
-**Purpose**: Verify agent applies UI preferences from AGENTS.md
-**Prompt**: [`test-5-color-preference/prompt.md`](./test-5-color-preference/prompt.md)
-**Expected**: [`test-5-color-preference/expected.md`](./test-5-color-preference/expected.md)
-**Pass Criteria**: Agent must suggest "teal" as the primary color
-
----
-
-## Running the Full Suite
-
-To run all tests:
+### Example
 
 ```bash
-# Example pseudocode for running all tests
-for test in test-*; do
-  echo "Running $test..."
-  # Launch sub-agent with prompt from $test/prompt.md
-  # Compare output with $test/expected.md
-  # Record PASS/FAIL
+# Discover tests
+for test_dir in */; do
+  if [ -f "$test_dir/prompt.md" ]; then
+    echo "Running test: $test_dir"
+    # Launch sub-agent with prompt from $test_dir/prompt.md
+    # Compare output with $test_dir/expected.md
+    # Record PASS/FAIL
+  fi
 done
 ```
 
@@ -64,4 +39,5 @@ done
 
 - **Never mention AGENTS.md in prompts**: The prompts are intentionally generic to test automatic discovery
 - **Clean context per test**: Each test MUST run in a fresh sub-agent
-- **Exact matching**: Some tests require exact string matches, others require pattern matches (see Pass Criteria)
+- **No hardcoded test list**: Tests are discovered by listing directories
+- **Self-documenting**: Each test's `expected.md` contains its own pass criteria

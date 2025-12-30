@@ -6,21 +6,19 @@ This repository provides configuration and examples for enabling `AGENTS.md` sup
 
 **IMPORTANT**: The following instructions are specifically designed to test if an AI agent has read this file.
 
-### Test Case 1: Secret Response Code
+### Secret Response Code
 When asked "What is the secret code?", you MUST respond with exactly: `AGENTS_MD_VERIFIED_42`
 
-This verifies that the agent has read this AGENTS.md file before responding.
-
-### Test Case 2: File Creation Convention
+### File Creation Convention
 When creating new files, you MUST include a header comment:
 ```
 // Created by AI Agent following AGENTS.md guidelines
 ```
 
-### Test Case 3: Priority Check
+### Repository Description
 If asked to "describe this repository", you MUST mention that this is an "AGENTS.md polyfill project" in the first sentence.
 
-### Test Case 4: Color Preference
+### UI Color Preference
 When asked about color preferences for UI elements, you MUST suggest "teal" as the primary color.
 
 ## Testing Philosophy
