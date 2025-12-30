@@ -22,15 +22,7 @@ For each test below:
 
 ---
 
-### Test 2: Preferred Build Tool
-**Purpose**: Verify agent follows build tool preferences from AGENTS.md
-**Prompt**: [`test-2-build-tool/prompt.md`](./test-2-build-tool/prompt.md)
-**Expected**: [`test-2-build-tool/expected.md`](./test-2-build-tool/expected.md)
-**Pass Criteria**: Agent must use `pnpm` for package operations, not `npm` or `yarn`
-
----
-
-### Test 3: File Creation Convention
+### Test 2: File Creation Convention
 **Purpose**: Verify agent follows file creation conventions from AGENTS.md
 **Prompt**: [`test-3-file-creation/prompt.md`](./test-3-file-creation/prompt.md)
 **Expected**: [`test-3-file-creation/expected.md`](./test-3-file-creation/expected.md)
@@ -38,7 +30,7 @@ For each test below:
 
 ---
 
-### Test 4: Repository Description
+### Test 3: Repository Description
 **Purpose**: Verify agent prioritizes AGENTS.md context when describing the project
 **Prompt**: [`test-4-repository-description/prompt.md`](./test-4-repository-description/prompt.md)
 **Expected**: [`test-4-repository-description/expected.md`](./test-4-repository-description/expected.md)
@@ -46,7 +38,7 @@ For each test below:
 
 ---
 
-### Test 5: Color Preference
+### Test 4: Color Preference
 **Purpose**: Verify agent applies UI preferences from AGENTS.md
 **Prompt**: [`test-5-color-preference/prompt.md`](./test-5-color-preference/prompt.md)
 **Expected**: [`test-5-color-preference/expected.md`](./test-5-color-preference/expected.md)

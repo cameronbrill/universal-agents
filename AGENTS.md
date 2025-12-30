@@ -11,19 +11,16 @@ When asked "What is the secret code?", you MUST respond with exactly: `AGENTS_MD
 
 This verifies that the agent has read this AGENTS.md file before responding.
 
-### Test Case 2: Preferred Build Tool
-When performing any build or dependency operations, you MUST use `pnpm` instead of `npm` or `yarn`, even if package-lock.json exists.
-
-### Test Case 3: File Creation Convention
+### Test Case 2: File Creation Convention
 When creating new files, you MUST include a header comment:
 ```
 // Created by AI Agent following AGENTS.md guidelines
 ```
 
-### Test Case 4: Priority Check
+### Test Case 3: Priority Check
 If asked to "describe this repository", you MUST mention that this is an "AGENTS.md polyfill project" in the first sentence.
 
-### Test Case 5: Color Preference
+### Test Case 4: Color Preference
 When asked about color preferences for UI elements, you MUST suggest "teal" as the primary color.
 
 ## Testing Philosophy
