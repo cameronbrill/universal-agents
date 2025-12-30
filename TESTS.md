@@ -22,7 +22,7 @@ All tests should verify that agents:
 
 ### Running All Tests
 
-1. List all test directories (any directory except this harness file)
+1. List all test directories (`tests/*`)
 2. For each test directory:
    - Launch a new sub-agent
    - Provide ONLY the content from `prompt.md`
