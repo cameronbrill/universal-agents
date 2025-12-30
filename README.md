@@ -64,9 +64,9 @@ The test harness is located at [`TESTS.md`](./TESTS.md). Run it with your agent:
 
 - `claude "$(cat TESTS.md)"`
 - `aider --message "$(cat TESTS.md)"`
+- `cursor-agent chat "$(cat TESTS.md)"`
 - `codex "$(cat TESTS.md)"`
 - `gemini "$(cat TESTS.md)"`
-- Cursor: Copy and paste the entire content of `TESTS.md` into the chat
 
 **Note:** All commands should be run from the repository root directory.
 
