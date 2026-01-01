@@ -69,6 +69,23 @@ trim() {
 	echo "$var"
 }
 
+extract_answer() {
+	local text="$1"
+
+	# Try to extract content between <answer> and </answer> tags
+	# If tags are found, return only the content between them
+	# Otherwise, return the original text (for backwards compatibility)
+
+	# Look for answer tags NOT preceded by backtick
+	# Match the LAST occurrence to avoid backticked examples
+	if echo "$text" | grep -q "<answer>"; then
+		# Use perl for multiline matching, taking the last match to avoid backticked examples
+		echo "$text" | perl -0777 -ne 'my @matches = /<answer>\s*(.*?)\s*<\/answer>/gs; print $matches[-1] if @matches'
+	else
+		echo "$text"
+	fi
+}
+
 indent() {
 	local spaces="$1"
 	local text="$2"
@@ -175,11 +192,16 @@ run_test() {
 
 	output=$(trim "$output")
 
-	if [ "$output" = "$expected" ]; then
+	# Extract answer from <answer> tags if present
+	local extracted_answer=$(extract_answer "$output")
+	extracted_answer=$(trim "$extracted_answer")
+
+	if [ "$extracted_answer" = "$expected" ]; then
 		return 0
 	else
 		TEST_EXPECTED="$expected"
 		TEST_GOT="$output"
+		TEST_EXTRACTED="$extracted_answer"
 		return 1
 	fi
 }
@@ -194,14 +216,18 @@ display_result() {
 		if [ "$VERBOSE" -eq 1 ]; then
 			printf "    Expected:\n"
 			indent 6 "$TEST_EXPECTED"
-			printf "    Got:\n"
+			printf "    Extracted:\n"
+			indent 6 "$TEST_EXTRACTED"
+			printf "    Full output:\n"
 			indent 6 "$TEST_GOT"
 		fi
 	else
 		printf "$(c error ✗) $(c test $test_name)\n"
 		printf "    Expected:\n"
 		indent 6 "$TEST_EXPECTED"
-		printf "    Got:\n"
+		printf "    Extracted:\n"
+		indent 6 "$TEST_EXTRACTED"
+		printf "    Full output:\n"
 		indent 6 "$TEST_GOT"
 	fi
 }
