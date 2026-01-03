@@ -177,18 +177,55 @@ run_test() {
 	expected=$(cat "$test_dir/expected.md")
 	expected=$(trim "$expected")
 
-	# Run agent from within sandbox directory
+	# Determine the command to run
 	case "$agent" in
 		claude)
-			output=$(echo "$prompt" | claude --print 2>/dev/null)
+			TEST_COMMAND="echo \"$prompt\" | claude --print"
 			;;
 		gemini)
-			output=$(echo "$prompt" | gemini 2>/dev/null)
+			TEST_COMMAND="echo \"$prompt\" | gemini"
 			;;
 		*)
-			output=$(echo "$prompt" | "$agent" 2>/dev/null)
+			TEST_COMMAND="echo \"$prompt\" | $agent"
 			;;
 	esac
+
+	# Run agent from within sandbox directory
+	if [ "$VERBOSE" -eq 1 ]; then
+		# In verbose mode, clear the spinner line and show command and stream output
+		printf "\r\033[K"  # Clear the entire line
+		printf "  $(c test $test_name)\n"
+		printf "    $(c heading CWD:)\n"
+		indent 6 "$sandbox_dir"
+		printf "    $(c heading Command:)\n"
+		indent 6 "$TEST_COMMAND"
+		printf "    $(c heading Full output:)\n"
+
+		case "$agent" in
+			claude)
+				output=$(echo "$prompt" | claude --print 2>/dev/null | sed 's/^/      /' | tee /dev/stderr)
+				;;
+			gemini)
+				output=$(echo "$prompt" | gemini 2>/dev/null | sed 's/^/      /' | tee /dev/stderr)
+				;;
+			*)
+				output=$(echo "$prompt" | "$agent" 2>/dev/null | sed 's/^/      /' | tee /dev/stderr)
+				;;
+		esac
+	else
+		# In normal mode, just capture output
+		case "$agent" in
+			claude)
+				output=$(echo "$prompt" | claude --print 2>/dev/null)
+				;;
+			gemini)
+				output=$(echo "$prompt" | gemini 2>/dev/null)
+				;;
+			*)
+				output=$(echo "$prompt" | "$agent" 2>/dev/null)
+				;;
+		esac
+	fi
 
 	output=$(trim "$output")
 
@@ -196,12 +233,14 @@ run_test() {
 	local extracted_answer=$(extract_answer "$output")
 	extracted_answer=$(trim "$extracted_answer")
 
+	# Set these for display_result
+	TEST_EXPECTED="$expected"
+	TEST_GOT="$output"
+	TEST_EXTRACTED="$extracted_answer"
+
 	if [ "$extracted_answer" = "$expected" ]; then
 		return 0
 	else
-		TEST_EXPECTED="$expected"
-		TEST_GOT="$output"
-		TEST_EXTRACTED="$extracted_answer"
 		return 1
 	fi
 }
@@ -211,24 +250,39 @@ display_result() {
 	local result="$2"
 
 	if [ "$result" -eq 0 ]; then
-		printf "$(c success ✓) $(c test $test_name)\n"
-
 		if [ "$VERBOSE" -eq 1 ]; then
-			printf "    Expected:\n"
-			indent 6 "$TEST_EXPECTED"
-			printf "    Extracted:\n"
-			indent 6 "$TEST_EXTRACTED"
-			printf "    Full output:\n"
-			indent 6 "$TEST_GOT"
+			# In verbose mode, just show the result and details
+			printf "    $(c heading Extracted:)\n"
+			printf "      %s\n" "$TEST_EXTRACTED"
+			printf "    $(c heading Expected:)\n"
+			printf "      %s\n" "$TEST_EXPECTED"
+			printf "    $(c success Result:) $(c success PASS)\n"
+		else
+			# In normal mode, clear spinner and show checkmark
+			printf "\r\033[K"  # Clear the entire line
+			printf "$(c success ✓) $(c test $test_name)\n"
 		fi
 	else
-		printf "$(c error ✗) $(c test $test_name)\n"
-		printf "    Expected:\n"
-		indent 6 "$TEST_EXPECTED"
-		printf "    Extracted:\n"
-		indent 6 "$TEST_EXTRACTED"
-		printf "    Full output:\n"
-		indent 6 "$TEST_GOT"
+		if [ "$VERBOSE" -eq 1 ]; then
+			# In verbose mode, command and full output already shown during streaming
+			printf "    $(c heading Extracted:)\n"
+			printf "      %s\n" "$TEST_EXTRACTED"
+			printf "    $(c heading Expected:)\n"
+			printf "      %s\n" "$TEST_EXPECTED"
+			printf "    $(c error Result:) $(c error FAIL)\n"
+		else
+			# In normal mode, show everything for failures
+			printf "\r\033[K"  # Clear the entire line
+			printf "$(c error ✗) $(c test $test_name)\n"
+			printf "    $(c heading Command:)\n"
+			indent 6 "$TEST_COMMAND"
+			printf "    $(c heading Full output:)\n"
+			indent 6 "$TEST_GOT"
+			printf "    $(c heading Extracted:)\n"
+			indent 6 "$TEST_EXTRACTED"
+			printf "    $(c heading Expected:)\n"
+			indent 6 "$TEST_EXPECTED"
+		fi
 	fi
 }
 
