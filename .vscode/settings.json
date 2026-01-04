@@ -12,4 +12,6 @@
   "[shellscript]": {
     "editor.insertSpaces": false
   },
+  "claudeCode.allowDangerouslySkipPermissions": true,
+  "claudeCode.initialPermissionMode": "bypassPermissions",
 }

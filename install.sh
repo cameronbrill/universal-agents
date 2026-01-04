@@ -298,7 +298,7 @@ template_claude_settings() {
 		        "hooks": [
 		          {
 		            "type": "command",
-		            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/polyfill_agentsmd.sh"
+		            "command": "$CLAUDE_PROJECT_DIR/.agents/polyfills/claude_agentsmd.sh"
 		          }
 		        ]
 		      }
@@ -517,10 +517,19 @@ plan_claude() {
 		add_change "create" ".claude/settings.json" "" "$(template_claude_settings)"
 	fi
 
-	if [ -f ".claude/hooks/polyfill_agentsmd.sh" ]; then
-		add_change "skip" ".claude/hooks/polyfill_agentsmd.sh" "already exists" ""
+	# Always update the polyfill if content differs
+	local polyfill_path=".agents/polyfills/claude_agentsmd.sh"
+	local new_content="$(template_claude_hook)"
+
+	if [ -f "$polyfill_path" ]; then
+		local current_content="$(cat "$polyfill_path")"
+		if [ "$current_content" = "$new_content" ]; then
+			add_change "skip" "$polyfill_path" "already up to date" ""
+		else
+			add_change "modify" "$polyfill_path" "update to latest version" "$new_content"
+		fi
 	else
-		add_change "create" ".claude/hooks/polyfill_agentsmd.sh" "" "$(template_claude_hook)"
+		add_change "create" "$polyfill_path" "" "$new_content"
 	fi
 }
 
