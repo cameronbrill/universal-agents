@@ -1,6 +1,6 @@
-# Universal AGENTS.md Polyfill
+# AGENTS.md for Popular Coding Agents
 
-Universal AGENTS.md support for popular coding agents.
+Configure Claude Code, Gemini CLI, and other agents to use AGENTS.md.
 
 ## Installation
 
@@ -8,49 +8,38 @@ Universal AGENTS.md support for popular coding agents.
 curl -fsSL https://raw.githubusercontent.com/agentsmd/universal-agents/main/install.sh | sh
 ```
 
-## Features
+## What This Does
 
-✨ **One-Command Setup** - Install and configure in seconds
-🔧 **Smart Polyfills** - Implements AGENTS.md support via SessionStart hooks
-📂 **Hierarchical Support** - Proper inheritance from nested AGENTS.md files
-🔄 **Idempotent** - Safe to re-run, updates only what's needed
+Configures your installed AI coding agents to recognize [AGENTS.md](https://agents.md).
 
-## Supported Agents
+### Claude Code
 
-| Agent | Support Method |
-|-------|----------------|
-| **Claude Code** | SessionStart hook with inheritance logic |
-| **Gemini CLI** | Native `context.fileName` configuration |
-
-More agents coming soon.
-
-## How It Works
-
-The installer configures agents to support AGENTS.md ([learn more about the standard](https://agents.md)) - either through direct configuration or by adding polyfill hooks where native support is missing.
-
-### For Claude Code
-
-Installs a SessionStart hook that implements hierarchical AGENTS.md support:
-- **On-demand loading** - Loads AGENTS.md files only as you work in relevant directories (minimizes context token usage)
+Adds a SessionStart hook that implements AGENTS.md support:
 - **Hierarchical inheritance** - Nested AGENTS.md files automatically apply with proper precedence
-- **Root context** - Project-wide AGENTS.md loaded once at startup
+- **On-demand loading** - Loads context only as you work in relevant directories (minimizes token usage)
+- **No extra files** - No CLAUDE.md files or symlinks needed
 
-### For Gemini
+### Gemini CLI
 
-Updates `.gemini/settings.json` to include AGENTS.md in the context file list.
+Configures Gemini to look for AGENTS.md in addition to GEMINI.md files.
 
 ## Usage
 
-After installation, just create an `AGENTS.md` file in your project root:
+After installation, create `AGENTS.md` in your project:
 
-```bash
+```markdown
 # AGENTS.md
 
-This project uses TypeScript with strict mode enabled.
-Always run `npm test` before committing.
+## Standards
+- TypeScript strict mode
+- Run `npm test` before committing
+
+## Architecture
+- API routes in `/src/api`
+- Components in `/src/components`
 ```
 
-Your AI agent will now automatically load and follow these instructions.
+Your agents will load it automatically.
 
 ### Nested AGENTS.md
 
@@ -58,47 +47,17 @@ Create scoped instructions for specific directories:
 
 ```
 project/
-├── AGENTS.md                  # Applies to entire project
-├── src/
-│   └── api/
-│       └── AGENTS.md          # Applies only to API code
+├── AGENTS.md              # Project-wide
+└── src/
+    └── api/
+        └── AGENTS.md      # API-specific (overrides project-wide)
 ```
 
-More specific instructions override general ones.
-
-## CLI Reference
+## CLI
 
 ```bash
-./install.sh [OPTIONS] [PATH] [AGENTS...]
-
-Options:
-  -h, --help       Show help
-  -y, --yes        Auto-confirm changes
-  -n, --dry-run    Show planned changes without applying
-
-Examples:
-  ./install.sh                    # All agents, current directory
-  ./install.sh claude             # Claude only
-  ./install.sh /path/to/project   # All agents, specific path
-  ./install.sh -n                 # Preview changes
+./install.sh              # Configure all installed agents
+./install.sh claude       # Claude only
+./install.sh gemini       # Gemini only
+./install.sh -n          # Dry run (preview changes)
 ```
-
-## Testing
-
-Verify AGENTS.md support is working:
-
-```bash
-./tests/test.sh              # Run all tests on all agents
-./tests/test.sh claude       # Test Claude only
-./tests/test.sh basic-load   # Run specific test
-```
-
-## Resources
-
-- **AGENTS.md Spec**: https://agents.md
-- **GitHub**: https://github.com/agentsmd/agents.md
-- **Issues**: https://github.com/anthropics/claude-code/issues/6235
-
-## License
-
-MIT
