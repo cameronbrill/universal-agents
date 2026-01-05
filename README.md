@@ -1,80 +1,39 @@
-# Universal AGENTS.md Polyfill
+# AGENTS.md for Popular Coding Agents
 
-A comprehensive example repository demonstrating how to configure popular AI coding agents to support the `AGENTS.md` standard.
+Full-featured AGENTS.md support for Claude Code, Gemini CLI, and more.
 
-## What is AGENTS.md?
+## Installation
 
-`AGENTS.md` is an open format designed to provide AI coding agents with specific context and instructions they need to work on a project. It's currently used by over 60,000 open-source projects and is supported by tools like:
-
-- **Aider** - AI pair programming in your terminal
-- **Gemini CLI** - Google's AI coding assistant
-- **Cursor** - AI-first code editor
-- **OpenAI Codex** - OpenAI's coding agent
-- **GitHub Copilot** - Microsoft's AI pair programmer
-- And many more...
-
-## Quick Start
-
-1. **Clone this repository**:
-
-   ```bash
-   git clone <repository-url>
-   cd universal-agents
-   ```
-
-2. **Choose your AI agent** and follow the configuration guide in `CONFIG_GUIDE.md`
-
-3. **Test the configuration** using the test suite in `tests/`
-
-## Repository Structure
-
-```
-universal-agents/
-├── AGENTS.md                    # Example AGENTS.md with test instructions
-├── CLAUDE.md                    # Claude Code configuration (imports AGENTS.md)
-├── .gemini/
-│   └── settings.json            # Gemini CLI configuration
-├── .claude/
-│   ├── settings.json            # Claude Code SessionStart hook config
-│   └── hooks/
-│       └── append_agentsmd_context.sh
-├── CONFIG_GUIDE.md              # Detailed configuration guide
-├── tests/
-│   ├── test.sh                  # Test runner script
-│   ├── README.md                # Test documentation
-│   └── [test directories]/      # Individual test cases
-└── README.md                    # This file
+```bash
+curl -fsSL https://raw.githubusercontent.com/agentsmd/universal-agents/main/install.sh | sh
 ```
 
-## Testing AGENTS.md Support
+## What This Does
 
-This repository includes a test suite to verify that your AI agent correctly loads `AGENTS.md`.
+Configures your installed AI coding agents with complete [AGENTS.md](https://agents.md) support:
 
-### Running Tests
+- **AGENTS.md as context** - Agents automatically load AGENTS.md files instead of (or in addition to) their proprietary formats
+- **Hierarchical inheritance** - Nested AGENTS.md files apply with proper precedence (closer = higher priority)
+- **Smart loading** - Only loads relevant AGENTS.md files, not all of them (essential for large monorepos)
 
-```sh
-./tests/test.sh              # Run all tests on all available agents
-./tests/test.sh claude       # Run all tests on claude
-./tests/test.sh basic-load   # Run specific test on all agents
+### How It Works
+
+**Claude Code:** SessionStart hook that implements AGENTS.md with no CLAUDE.md files or symlinks needed
+
+**Gemini CLI:** Native configuration pointing to AGENTS.md in addition to GEMINI.md
+
+## Usage
+
+Create AGENTS.md files anywhere in your project. They'll be loaded automatically with proper scoping:
+
+```
+project/
+├── AGENTS.md              # Applies project-wide
+└── src/
+    └── api/
+        └── AGENTS.md      # Applies to API work (overrides project-wide)
 ```
 
-See [tests/AGENTS.md](tests/AGENTS.md) for test design guidelines.
+When working in `src/api/`, both AGENTS.md files apply - with the API-specific one taking precedence for conflicts.
 
-## Contributing
-
-This is an example repository demonstrating `AGENTS.md` configuration patterns. Contributions are welcome, especially:
-
-- Additional agent configurations
-- Improved test cases
-- Better workarounds for agents without native support
-- Documentation improvements
-
-## Resources
-
-- **AGENTS.md Specification**: https://agents.md
-- **GitHub Repository**: https://github.com/agentsmd/agents.md
-- **Claude Code Feature Request**: https://github.com/anthropics/claude-code/issues/6235
-
-## License
-
-MIT
+Agents load context only for the directories you're working in, keeping token usage efficient even in large projects.
