@@ -271,6 +271,12 @@ template_claude_hook() {
 	cat <<-'end_template'
 		#!/bin/sh
 
+		# This project is licensed under the [Blue Oak Model License, Version 1.0.0][1],
+		# but you may also license it under [Apache License, Version 2.0][2] if you—
+		# or your legal team—prefer.
+		# [1]: https://blueoakcouncil.org/license/1.0.0
+		# [2]: https://www.apache.org/licenses/LICENSE-2.0
+
 		cd "$CLAUDE_PROJECT_DIR"
 		agent_files=$(find . -name "AGENTS.md" -type f)
 		[ -z "$agent_files" ] && exit 0

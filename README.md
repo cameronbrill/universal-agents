@@ -37,3 +37,7 @@ project/
 When working in `src/api/`, both AGENTS.md files apply - with the API-specific one taking precedence for conflicts.
 
 Agents load context only for the directories you're working in, keeping token usage efficient even in large projects.
+
+## License
+
+This project is licensed under the [Blue Oak Model License, Version 1.0.0](LICENSE.md), but you may also license it under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) if you—or your legal team—prefer.
