@@ -1,6 +1,6 @@
 # AGENTS.md for Popular Coding Agents
 
-Configure Claude Code, Gemini CLI, and other agents to use AGENTS.md.
+Full-featured AGENTS.md support for Claude Code, Gemini CLI, and more.
 
 ## Installation
 
@@ -10,54 +10,30 @@ curl -fsSL https://raw.githubusercontent.com/agentsmd/universal-agents/main/inst
 
 ## What This Does
 
-Configures your installed AI coding agents to recognize [AGENTS.md](https://agents.md).
+Configures your installed AI coding agents with complete [AGENTS.md](https://agents.md) support:
 
-### Claude Code
+- **AGENTS.md as context** - Agents automatically load AGENTS.md files instead of (or in addition to) their proprietary formats
+- **Hierarchical inheritance** - Nested AGENTS.md files apply with proper precedence (closer = higher priority)
+- **Smart loading** - Only loads relevant AGENTS.md files, not all of them (essential for large monorepos)
 
-Adds a SessionStart hook that implements AGENTS.md support:
-- **Hierarchical inheritance** - Nested AGENTS.md files automatically apply with proper precedence
-- **On-demand loading** - Loads context only as you work in relevant directories (minimizes token usage)
-- **No extra files** - No CLAUDE.md files or symlinks needed
+### How It Works
 
-### Gemini CLI
+**Claude Code:** SessionStart hook that implements AGENTS.md with no CLAUDE.md files or symlinks needed
 
-Configures Gemini to look for AGENTS.md in addition to GEMINI.md files.
+**Gemini CLI:** Native configuration pointing to AGENTS.md in addition to GEMINI.md
 
 ## Usage
 
-After installation, create `AGENTS.md` in your project:
-
-```markdown
-# AGENTS.md
-
-## Standards
-- TypeScript strict mode
-- Run `npm test` before committing
-
-## Architecture
-- API routes in `/src/api`
-- Components in `/src/components`
-```
-
-Your agents will load it automatically.
-
-### Nested AGENTS.md
-
-Create scoped instructions for specific directories:
+Create AGENTS.md files anywhere in your project. They'll be loaded automatically with proper scoping:
 
 ```
 project/
-├── AGENTS.md              # Project-wide
+├── AGENTS.md              # Applies project-wide
 └── src/
     └── api/
-        └── AGENTS.md      # API-specific (overrides project-wide)
+        └── AGENTS.md      # Applies to API work (overrides project-wide)
 ```
 
-## CLI
+When working in `src/api/`, both AGENTS.md files apply - with the API-specific one taking precedence for conflicts.
 
-```bash
-./install.sh              # Configure all installed agents
-./install.sh claude       # Claude only
-./install.sh gemini       # Gemini only
-./install.sh -n          # Dry run (preview changes)
-```
+Agents load context only for the directories you're working in, keeping token usage efficient even in large projects.
