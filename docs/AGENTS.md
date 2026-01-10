@@ -7,6 +7,7 @@ This directory contains reference documentation for AI coding agents and their c
 ```
 docs/
 ├── AGENTS.md           # This file - index and guidelines
+├── Comparison.md       # Comparison with similar projects
 └── agents/             # Per-agent configuration references
     ├── Claude.md       # Claude Code configuration
     ├── Gemini.md       # Gemini CLI configuration
@@ -15,13 +16,18 @@ docs/
     └── Codex.md        # OpenAI Codex configuration (future)
 ```
 
-## Agent Documentation
+## Documentation
 
-### Currently Supported
+### Project Overview
+- **[Comparison with Similar Projects](Comparison.md)** - Analysis of universal-agents vs Ruler, OpenSkills, and other approaches
+
+### Agent Documentation
+
+#### Currently Supported
 - **[Claude Code](agents/Claude.md)** - Full support (project + global modes)
 - **[Gemini CLI](agents/Gemini.md)** - Full support (project + global modes)
 
-### Future Support
+#### Future Support
 - **[Cursor CLI](agents/Cursor.md)** - Research complete, implementation pending
 - **[Aider](agents/Aider.md)** - Research complete, implementation pending
 - **[Codex](agents/Codex.md)** - Research complete, implementation pending

@@ -7,6 +7,7 @@ This file provides context and instructions for AI coding agents working on this
 This project maintains detailed documentation in the `docs/` directory:
 
 - **[docs/AGENTS.md](docs/AGENTS.md)** - Documentation index and formatting guidelines
+- **[docs/Comparison.md](docs/Comparison.md)** - Comprehensive comparison with similar projects (Ruler, OpenSkills, CCS, etc.)
 - **[docs/agents/](docs/agents/)** - Per-agent configuration references
 
 **For AI Agents**: When you need context about:
@@ -16,8 +17,11 @@ This project maintains detailed documentation in the `docs/` directory:
 
 Read the relevant documentation in `docs/agents/<Agent>.md` first.
 
+**To understand the ecosystem**: Read [docs/Comparison.md](docs/Comparison.md) for analysis of similar projects, alternative approaches, and how this project compares to Ruler, OpenSkills, symlinks, and other solutions.
+
 **When you learn new information** about agents or configuration:
 - Update the relevant docs in `docs/agents/`
+- Update [docs/Comparison.md](docs/Comparison.md) if you learn about competing/related projects
 - Keep documentation accurate and up-to-date
 - Add sources for new information
 
