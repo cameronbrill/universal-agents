@@ -73,6 +73,7 @@ discover_tests() {
 run_test() {
 	local agent="$1"
 	local test_name="$2"
+	local mode="$3"
 	local test_dir="$TESTS_DIR/$test_name"
 	local sandbox_dir="$test_dir/sandbox"
 
@@ -93,9 +94,19 @@ run_test() {
 	temp_dir=$(mktemp -d -t "universal-agents-test-XXXXXX")
 	cp -R "$sandbox_dir/"* "$sandbox_dir/".* "$temp_dir/" 2>/dev/null || true
 
+	# For global mode, backup existing settings before install
+	local claude_backup=""
+	local gemini_backup=""
+	local polyfill_backup=""
+	if [ "$mode" = "global" ]; then
+		[ -f "$HOME/.claude/settings.json" ] && claude_backup=$(cat "$HOME/.claude/settings.json")
+		[ -f "$HOME/.gemini/settings.json" ] && gemini_backup=$(cat "$HOME/.gemini/settings.json")
+		[ -f "$HOME/.agents/polyfills/claude_agentsmd.sh" ] && polyfill_backup=$(cat "$HOME/.agents/polyfills/claude_agentsmd.sh")
+	fi
+
 	# Change to temp dir and run install
 	cd "$temp_dir"
-	"$REPO_ROOT/install.sh" -y > /dev/null 2>&1
+	"$REPO_ROOT/install.sh" -y $([ "$mode" = "global" ] && echo "--global" || echo "") > /dev/null 2>&1
 
 	prompt=$(cat "$test_dir/prompt.md")
 	expected=$(cat "$test_dir/expected.md")
@@ -103,18 +114,10 @@ run_test() {
 
 	# Determine the command to run
 	case "$agent" in
-		claude)
-			TEST_COMMAND="echo \"$prompt\" | claude --print"
-			;;
-		cursor-agent)
-			TEST_COMMAND="echo \"$prompt\" | cursor-agent --print"
-			;;
-		gemini)
-			TEST_COMMAND="echo \"$prompt\" | gemini"
-			;;
-		*)
-			TEST_COMMAND="echo \"$prompt\" | $agent"
-			;;
+		claude)       TEST_COMMAND="echo \"$prompt\" | claude --print" ;;
+		cursor-agent) TEST_COMMAND="echo \"$prompt\" | cursor-agent --print" ;;
+		gemini)       TEST_COMMAND="echo \"$prompt\" | gemini" ;;
+		*)            TEST_COMMAND="echo \"$prompt\" | $agent" ;;
 	esac
 
 	# Run agent from within temp directory
@@ -129,28 +132,16 @@ run_test() {
 		printf "    $(c heading Full output:)\n"
 
 		case "$agent" in
-			claude)
-				output=$(echo "$prompt" | claude --print 2>/dev/null | sed 's/^/      /' | tee /dev/stderr)
-				;;
-			gemini)
-				output=$(echo "$prompt" | gemini 2>/dev/null | sed 's/^/      /' | tee /dev/stderr)
-				;;
-			*)
-				output=$(echo "$prompt" | "$agent" 2>/dev/null | sed 's/^/      /' | tee /dev/stderr)
-				;;
+			claude) output=$(echo "$prompt" | claude --print 2>/dev/null | sed 's/^/      /' | tee /dev/stderr) ;;
+			gemini) output=$(echo "$prompt" | gemini 2>/dev/null | sed 's/^/      /' | tee /dev/stderr) ;;
+			*)      output=$(echo "$prompt" | "$agent" 2>/dev/null | sed 's/^/      /' | tee /dev/stderr) ;;
 		esac
 	else
 		# In normal mode, just capture output
 		case "$agent" in
-			claude)
-				output=$(echo "$prompt" | claude --print 2>/dev/null)
-				;;
-			gemini)
-				output=$(echo "$prompt" | gemini 2>/dev/null)
-				;;
-			*)
-				output=$(echo "$prompt" | "$agent" 2>/dev/null)
-				;;
+			claude) output=$(echo "$prompt" | claude --print 2>/dev/null) ;;
+			gemini) output=$(echo "$prompt" | gemini 2>/dev/null) ;;
+			*)      output=$(echo "$prompt" | "$agent" 2>/dev/null) ;;
 		esac
 	fi
 
@@ -172,19 +163,51 @@ run_test() {
 		return 1
 	fi
 
+	local test_result=0
 	if [ "$extracted_answer" = "$expected" ]; then
 		# Clean up temp dir on success
 		rm -rf "$temp_dir"
-		return 0
+		test_result=0
 	else
 		# Keep temp dir on failure for debugging
-		return 1
+		test_result=1
 	fi
+
+	# Restore backups for global mode
+	if [ "$mode" = "global" ]; then
+		if [ -n "$claude_backup" ]; then
+			mkdir -p "$HOME/.claude"
+			echo "$claude_backup" > "$HOME/.claude/settings.json"
+		else
+			rm -f "$HOME/.claude/settings.json"
+		fi
+		if [ -n "$gemini_backup" ]; then
+			mkdir -p "$HOME/.gemini"
+			echo "$gemini_backup" > "$HOME/.gemini/settings.json"
+		else
+			rm -f "$HOME/.gemini/settings.json"
+		fi
+		if [ -n "$polyfill_backup" ]; then
+			mkdir -p "$HOME/.agents/polyfills"
+			echo "$polyfill_backup" > "$HOME/.agents/polyfills/claude_agentsmd.sh"
+		else
+			rm -f "$HOME/.agents/polyfills/claude_agentsmd.sh"
+		fi
+	fi
+
+	return $test_result
 }
 
 display_result() {
 	local test_name="$1"
 	local result="$2"
+	local mode="$3"
+
+	# Add mode indicator to test name
+	local display_name="$test_name"
+	if [ "$SHOW_MODE" -eq 1 ]; then
+		display_name="$test_name [$(c option "$mode")]"
+	fi
 
 	if [ "$result" -eq 0 ]; then
 		if [ "$VERBOSE" -eq 1 ]; then
@@ -196,7 +219,7 @@ display_result() {
 			printf "    $(c success Result:) $(c success PASS)\n"
 		else
 			# In normal mode, clear spinner and show checkmark
-			print_test_pass "$test_name"
+			print_test_pass "$display_name"
 		fi
 	else
 		if [ "$VERBOSE" -eq 1 ]; then
@@ -210,7 +233,7 @@ display_result() {
 			printf "      %s\n" "$TEST_TEMP_DIR"
 		else
 			# In normal mode, show everything for failures
-			print_test_fail "$test_name"
+			print_test_fail "$display_name"
 			printf "    $(c heading Temp dir:)\n"
 			print_indented 6 "$TEST_TEMP_DIR"
 			printf "    $(c heading Command:)\n"
@@ -230,7 +253,7 @@ display_result() {
 # ============================================
 
 usage() {
-	printf "$(c heading Usage:) $(c command test-agents.sh) [$(c agent AGENT)…] [$(c test TEST…)]"
+	printf "$(c heading Usage:) $(c command test-agents.sh) [$(c flag OPTIONS)] [$(c agent AGENT)…] [$(c test TEST…)]"
 }
 
 show_help() {
@@ -247,19 +270,23 @@ show_help() {
 	printf "  - Multiple agents and/or tests can be specified\n"
 	printf "  - Use $(c agent all) for all agents or $(c test all) for all tests\n\n"
 
-	printf "$(c heading Examples:)\n"
-	printf "  $(c command test-agents.sh)                                           # All tests, all agents\n"
-	printf "  $(c command test-agents.sh) $(c agent claude)                                    # All tests on claude\n"
-	printf "  $(c command test-agents.sh) $(c agent claude) $(c agent gemini)                             # All tests on claude and gemini\n"
-	printf "  $(c command test-agents.sh) $(c test basic-load)                                # basic-load on all agents\n"
-	printf "  $(c command test-agents.sh) $(c test basic-load) $(c test nested-precedence)             # Two tests on all agents\n"
-	printf "  $(c command test-agents.sh) $(c agent claude) $(c test basic-load)                         # basic-load on claude\n"
-	printf "  $(c command test-agents.sh) $(c agent claude) $(c agent gemini) $(c test basic-load)                # basic-load on two agents\n"
-	printf "  $(c command test-agents.sh) $(c agent claude) $(c test basic-load) $(c test nested-precedence)      # Two tests on claude\n\n"
-
 	printf "$(c heading Options:)\n"
-	printf "  -h, --help    Show this help message\n"
-	printf "  -v, --verbose Show full output for all tests\n\n"
+	printf "  -h, --help           Show this help message\n"
+	printf "  -v, --verbose        Show full output for all tests\n"
+	printf "  --mode $(c option MODE)      Installation mode to test: project, global, or all\n"
+	printf "                       (default: $(c option all))\n\n"
+
+	printf "$(c heading Examples:)\n"
+	printf "  $(c command test-agents.sh)                                           # All tests, all agents, all modes\n"
+	printf "  $(c command test-agents.sh) $(c agent claude)                                    # All tests on claude, all modes\n"
+	printf "  $(c command test-agents.sh) --mode $(c option global) $(c agent claude)                  # All tests on claude, global mode\n"
+	printf "  $(c command test-agents.sh) $(c agent claude) $(c agent gemini)                             # All tests on claude and gemini, all modes\n"
+	printf "  $(c command test-agents.sh) $(c test basic-load)                                # basic-load on all agents, all modes\n"
+	printf "  $(c command test-agents.sh) $(c test basic-load) $(c test nested-precedence)             # Two tests on all agents, all modes\n"
+	printf "  $(c command test-agents.sh) $(c agent claude) $(c test basic-load)                         # basic-load on claude, all modes\n"
+	printf "  $(c command test-agents.sh) --mode $(c option project) $(c agent claude) $(c test basic-load)          # basic-load on claude, project mode\n"
+	printf "  $(c command test-agents.sh) $(c agent claude) $(c agent gemini) $(c test basic-load)                # basic-load on two agents, all modes\n"
+	printf "  $(c command test-agents.sh) $(c agent claude) $(c test basic-load) $(c test nested-precedence)      # Two tests on claude, all modes\n\n"
 
 	printf "$(c heading Agents:)\n"
 	for agent in $KNOWN_AGENTS; do
@@ -289,6 +316,7 @@ show_help() {
 main() {
 	# Parse arguments
 	local verbose=0
+	local mode_arg="all"
 	local agent_args=""
 	local test_args=""
 	local parsing_mode="auto"  # auto, agents, tests
@@ -303,6 +331,17 @@ main() {
 				verbose=1
 				shift
 				;;
+			--mode)
+				mode_arg="$2"
+				case "$mode_arg" in
+					project|global|all)
+						shift 2
+						;;
+					*)
+						panic 2 show_usage "Invalid mode: $(c option "'$mode_arg'"). Valid modes: $(c_list option project global all)"
+						;;
+				esac
+				;;
 			*)
 				# Collect positional arguments
 				if [ "$parsing_mode" = "auto" ] || [ "$parsing_mode" = "agents" ]; then
@@ -315,8 +354,27 @@ main() {
 		esac
 	done
 
-	# Export for use in run_test
+	# Export for use in run_test and display_result
 	VERBOSE=$verbose
+
+	# Determine modes to run
+	local modes_to_run
+	if [ "$mode_arg" = "all" ]; then
+		modes_to_run="project global"
+	else
+		modes_to_run="$mode_arg"
+	fi
+
+	# Show mode in output if testing multiple modes
+	local mode_count=0
+	for mode in $modes_to_run; do
+		mode_count=$((mode_count + 1))
+	done
+	if [ $mode_count -gt 1 ]; then
+		SHOW_MODE=1
+	else
+		SHOW_MODE=0
+	fi
 
 	# Discover available agents and tests
 	local available_agents=$(discover_agents)
@@ -427,20 +485,28 @@ main() {
 		local failed=0
 
 		for test_name in $tests_to_run; do
-			print_test_running "$test_name"
+			for mode in $modes_to_run; do
+				# Build display name for running state
+				local display_name="$test_name"
+				if [ "$SHOW_MODE" -eq 1 ]; then
+					display_name="$test_name [$(c option "$mode")]"
+				fi
 
-			if run_test "$agent" "$test_name"; then
-				passed=$((passed + 1))
-				total_passed=$((total_passed + 1))
-				result=0
-			else
-				failed=$((failed + 1))
-				total_failed=$((total_failed + 1))
-				result=1
-			fi
+				print_test_running "$display_name"
 
-			printf "\r"
-			display_result "$test_name" "$result"
+				if run_test "$agent" "$test_name" "$mode"; then
+					passed=$((passed + 1))
+					total_passed=$((total_passed + 1))
+					result=0
+				else
+					failed=$((failed + 1))
+					total_failed=$((total_failed + 1))
+					result=1
+				fi
+
+				printf "\r"
+				display_result "$test_name" "$result" "$mode"
+			done
 		done
 
 		local agent_var=$(normalize_agent_name "$agent")

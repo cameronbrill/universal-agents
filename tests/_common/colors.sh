@@ -21,6 +21,8 @@ color_test="$color_yellow"
 color_command="$color_purple"
 color_heading="$color_bold"
 color_suite="$color_blue"
+color_flag="$color_purple"
+color_option="$color_blue"
 
 c() {
 	local color_name="$1"; shift

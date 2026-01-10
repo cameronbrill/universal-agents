@@ -5,6 +5,9 @@ VERSION="1.0.0"
 
 SUPPORTED_AGENTS="claude gemini"
 
+# Installation modes
+INSTALL_MODE="project"  # project, local, or global
+
 # ============================================
 # Colors
 # ============================================
@@ -26,6 +29,7 @@ color_heading="$color_bold"
 color_agent="$color_cyan"
 color_flag="$color_purple"
 color_path="$color_yellow"
+color_option="$color_blue"
 
 c() {
 	local color_name="$1"; shift
@@ -72,6 +76,40 @@ trim() {
 	var="${var#"${var%%[![:space:]]*}"}"
 	var="${var%"${var##*[![:space:]]}"}"
 	echo "$var"
+}
+
+# Get Claude settings file path based on install mode
+claude_settings_path() {
+	case "$INSTALL_MODE" in
+		project) echo ".claude/settings.json" ;;
+		global)  echo "$HOME/.claude/settings.json" ;;
+	esac
+}
+
+# Get Gemini settings file path based on install mode
+gemini_settings_path() {
+	case "$INSTALL_MODE" in
+		project) echo ".gemini/settings.json" ;;
+		global)  echo "$HOME/.gemini/settings.json" ;;
+	esac
+}
+
+# Get polyfill directory based on install mode
+polyfill_dir() {
+	case "$INSTALL_MODE" in
+		project) echo ".agents/polyfills" ;;
+		global)  echo "$HOME/.agents/polyfills" ;;
+	esac
+}
+
+# Get polyfill reference path for settings.json
+polyfill_reference_path() {
+	local script_name="$1"
+	local dir=$(polyfill_dir)
+	case "$INSTALL_MODE" in
+		project) echo "\$CLAUDE_PROJECT_DIR/$dir/$script_name" ;;
+		global)  echo "$dir/$script_name" ;;
+	esac
 }
 
 panic() {
@@ -226,17 +264,6 @@ yaml_add_item() {
 # File templates
 # ============================================
 
-template_agents_md() {
-	cat <<-'end_template'
-		# AGENTS.md
-
-		This file provides context and instructions for AI coding agents.
-		Add your project-specific instructions here.
-
-		Learn more: https://agents.md
-	end_template
-}
-
 template_gemini_settings() {
 	cat <<-'end_template'
 		{
@@ -248,7 +275,8 @@ template_gemini_settings() {
 }
 
 template_claude_settings() {
-	cat <<-'end_template'
+	local polyfill_path=$(polyfill_reference_path "claude_agentsmd.sh")
+	cat <<-end_template
 		{
 		  "hooks": {
 		    "SessionStart": [
@@ -257,7 +285,7 @@ template_claude_settings() {
 		        "hooks": [
 		          {
 		            "type": "command",
-		            "command": "$CLAUDE_PROJECT_DIR/.agents/polyfills/claude_agentsmd.sh"
+		            "command": "$polyfill_path"
 		          }
 		        ]
 		      }
@@ -407,15 +435,9 @@ display_ledger() {
 		eval "local desc=\$CHANGE_${i}_DESC"
 
 		case "$type" in
-			create)
-				printf "  $(c success CREATE)  $file"
-				;;
-			modify)
-				printf "  $(c warning MODIFY)  $file"
-				;;
-			skip)
-				printf "  $(c blue SKIP)    $file"
-				;;
+			create) printf "  $(c success CREATE)  $file" ;;
+			modify) printf "  $(c warning MODIFY)  $file" ;;
+			skip)   printf "  $(c blue SKIP)    $file" ;;
 		esac
 
 		[ -n "$desc" ] && printf " $(c blue "($desc)")"
@@ -433,12 +455,8 @@ ask_confirmation() {
 	read -r response
 
 	case "$response" in
-		[yY]|[yY][eE][sS])
-			return 0
-			;;
-		*)
-			return 1
-			;;
+		[yY]|[yY][eE][sS]) return 0 ;;
+		*)                 return 1 ;;
 	esac
 }
 
@@ -467,28 +485,20 @@ plan_json() {
 	fi
 }
 
-plan_agents_md() {
-	if [ -f "AGENTS.md" ]; then
-		add_change "skip" "AGENTS.md" "already exists" ""
-	else
-		add_change "create" "AGENTS.md" "placeholder" "$(template_agents_md)"
-	fi
-}
-
 plan_gemini() {
 	plan_json \
-		".gemini/settings.json" \
+		"$(gemini_settings_path)" \
 		"$(template_gemini_settings)" \
 		"add AGENTS.md to context"
 }
 
 plan_claude() {
 	plan_json \
-		".claude/settings.json" \
+		"$(claude_settings_path)" \
 		"$(template_claude_settings)" \
 		"add AGENTS.md hook"
 
-	local polyfill_path=".agents/polyfills/claude_agentsmd.sh"
+	local polyfill_path="$(polyfill_dir)/claude_agentsmd.sh"
 	local new_content="$(template_claude_hook)"
 
 	if [ -f "$polyfill_path" ]; then
@@ -563,15 +573,17 @@ show_help() {
 	printf "$(c heading Options:)\n"
 	printf "  $(c flag -h), $(c flag --help)       Show this help message\n"
 	printf "  $(c flag -y), $(c flag --yes)        Auto-confirm (skip confirmation prompt)\n"
-	printf "  $(c flag -n), $(c flag --dry-run)    Show plan only, don't apply changes\n\n"
+	printf "  $(c flag -n), $(c flag --dry-run)    Show plan only, don't apply changes\n"
+	printf "  $(c flag --global)            Install to user home directory (~/.claude/)\n\n"
 
 	printf "$(c heading Examples:)\n"
-	printf "  install.sh                      # All agents, current directory\n"
-	printf "  install.sh $(c agent claude)               # Only Claude, current directory\n"
+	printf "  install.sh                      # All agents, project mode (default)\n"
+	printf "  install.sh $(c flag --global)             # All agents, global mode (user home)\n"
+	printf "  install.sh $(c agent claude)               # Only Claude, project mode\n"
+	printf "  install.sh $(c flag --global) $(c agent claude)      # Claude only, global mode\n"
 	printf "  install.sh $(c path /path/to/project)     # All agents, specific directory\n"
-	printf "  install.sh $(c path .) $(c agent claude) $(c agent gemini)      # Claude and Gemini in current directory\n"
-	printf "  install.sh $(c flag -y) $(c agent claude)            # Auto-confirm, Claude only\n"
-	printf "  install.sh $(c flag -n)                   # Dry-run, all agents\n\n"
+	printf "  install.sh $(c flag -y)                   # Auto-confirm, project mode\n"
+	printf "  install.sh $(c flag -n)                   # Dry-run, project mode\n\n"
 }
 
 # ============================================
@@ -597,6 +609,10 @@ main() {
 				;;
 			-n|--dry-run)
 				dry_run=true
+				shift
+				;;
+			--global)
+				INSTALL_MODE="global"
 				shift
 				;;
 			-*)
@@ -655,11 +671,33 @@ main() {
 
 	cd "$project_dir" || panic 2 "Cannot access directory: $(c path "'$project_dir'")"
 
+	# Prompt for installation location if not specified and not auto-confirm
+	if [ "$INSTALL_MODE" = "project" ] && [ "$auto_confirm" = false ] && [ -t 0 ]; then
+		printf "\n$(c heading 'Installation location:')\n\n"
+		printf "  $(c option 1)) $(c option Project) - .claude/settings.json (shared, tracked in git)\n"
+		printf "  $(c option 2)) $(c option Global)  - ~/.claude/settings.json (user home, all projects)\n"
+		printf "\n"
+		printf "Choice [$(c option 1)]: "
+		read -r choice
+
+		choice=$(trim "${choice:-1}")
+		case "$choice" in
+			1|project|Project) INSTALL_MODE="project" ;;
+			2|global|Global)   INSTALL_MODE="global" ;;
+			*) panic 2 "Invalid choice: $choice" ;;
+		esac
+		printf "\n"
+	fi
+
 	printf "\n$(c heading '=== AGENTS.md Polyfill Installer ===')\n"
 	printf "Version: $VERSION\n"
-	printf "Project: $(pwd)\n\n"
+	printf "Project: $(pwd)\n"
+	if [ "$INSTALL_MODE" = "global" ]; then
+		printf "Location: $(c option Global) (~/.claude/)\n\n"
+	else
+		printf "Location: $(c option Project) (.claude/)\n\n"
+	fi
 
-	plan_agents_md
 	for agent in $SUPPORTED_AGENTS; do
 		if list_contains "$agent" "$enabled_agents"; then
 			eval "plan_$agent"
@@ -684,9 +722,8 @@ main() {
 	apply_changes
 
 	printf "\n$(c success '✓ Installation complete!')\n\n"
-
 	printf "$(c heading 'Next steps:')\n"
-	printf "  1. Edit AGENTS.md with your project instructions\n"
+	printf "  1. Create AGENTS.md files in your project\n"
 	printf "  2. Test with your AI agent\n"
 	printf "  3. Learn more: https://agents.md\n\n"
 }

@@ -1,6 +1,6 @@
-# AGENTS.md for Popular Coding Agents
+# Universal AGENTS.md Support
 
-Full-featured AGENTS.md support for Claude Code, Gemini CLI, and more.
+One install script. Full-featured [AGENTS.md](https://agents.md) support for all your AI coding agents.
 
 ## Installation
 

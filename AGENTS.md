@@ -2,6 +2,25 @@
 
 This file provides context and instructions for AI coding agents working on this project.
 
+## Documentation
+
+This project maintains detailed documentation in the `docs/` directory:
+
+- **[docs/AGENTS.md](docs/AGENTS.md)** - Documentation index and formatting guidelines
+- **[docs/agents/](docs/agents/)** - Per-agent configuration references
+
+**For AI Agents**: When you need context about:
+- Agent configuration formats and file locations
+- How specific agents work
+- Config file structures and hierarchies
+
+Read the relevant documentation in `docs/agents/<Agent>.md` first.
+
+**When you learn new information** about agents or configuration:
+- Update the relevant docs in `docs/agents/`
+- Keep documentation accurate and up-to-date
+- Add sources for new information
+
 ## Shell Script Style Guide
 
 This project follows strict shell scripting conventions to ensure portability, readability, and maintainability.
@@ -270,6 +289,90 @@ c_list() {
 
 # Usage
 printf "Available agents: $(c_list agent claude gemini)\n"
+```
+
+### Case Statements
+
+**One-line format for simple cases:**
+
+Use one-line format when each branch is a single simple command:
+
+```sh
+# Good - simple value lookups
+get_color() {
+	case "$1" in
+		error)   echo "$color_red" ;;
+		success) echo "$color_green" ;;
+		warning) echo "$color_yellow" ;;
+	esac
+}
+
+# Good - simple actions
+handle_result() {
+	case "$1" in
+		pass) return 0 ;;
+		fail) return 1 ;;
+		skip) return 2 ;;
+	esac
+}
+```
+
+**Multi-line format for complex cases:**
+
+Use multi-line format when branches have multiple commands or complex logic:
+
+```sh
+# Good - complex logic per branch
+apply_change() {
+	case "$type" in
+		create)
+			mkdir -p "$(dirname "$file")"
+			cat "$content" > "$file"
+			chmod +x "$file"
+			;;
+		modify)
+			cp "$file" "$file.backup"
+			cat "$content" > "$file"
+			;;
+		skip)
+			;;
+	esac
+}
+
+# Good - long commands or heredocs
+show_error() {
+	case "$error_type" in
+		missing_file)
+			panic 2 <<-end_panic
+				File not found: $file
+				Please check the path and try again.
+			end_panic
+			;;
+		invalid_arg)
+			panic 2 show_usage "Invalid argument: $arg"
+			;;
+	esac
+}
+```
+
+**Alignment:**
+
+For one-line format, align the `)` and `;;` for readability:
+
+```sh
+# Good - aligned for easy scanning
+case "$mode" in
+	project) echo ".$agent/settings.json" ;;
+	local)   echo ".$agent/settings.local.json" ;;
+	global)  echo "$HOME/.$agent/settings.json" ;;
+esac
+
+# Bad - no alignment
+case "$mode" in
+	project) echo ".$agent/settings.json" ;;
+	local) echo ".$agent/settings.local.json" ;;
+	global) echo "$HOME/.$agent/settings.json" ;;
+esac
 ```
 
 ### Script Structure

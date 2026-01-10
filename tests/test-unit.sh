@@ -204,13 +204,8 @@ load_test_suites
 main() {
 	while [ $# -gt 0 ]; do
 		case "$1" in
-			-v|--verbose)
-				VERBOSE=1
-				shift
-				;;
-			*)
-				shift
-				;;
+			-v|--verbose) VERBOSE=1; shift ;;
+			*)            shift ;;
 		esac
 	done
 
