@@ -20,8 +20,6 @@ The AI coding agent ecosystem suffers from configuration fragmentation, with eac
 
 - **Context Exclusion Standards**: Push toward `.aiignore` as universal standard for security/privacy (currently fragmented across .cursorignore, .aiexclude, etc.).
 
-- **universal-agents**: CLI for scaffolding rules and skills in `.agents/` while updating root `AGENTS.md` to point to those rules and skills.
-
 **Universal Agents' Unique Position**: Only solution providing full AGENTS.md spec without file duplication or sync steps, using agent-native extension mechanisms (hooks/config). Trade-off is limited agent support (2 vs many) for deeper, cleaner integration.
 
 **The Broader Ecosystem**: Beyond configuration files, the industry is establishing protocols for agent interoperability (MCP, A2A), context engineering, and security. Each AI coding tool has distinct configuration approaches, from Continue.dev's YAML to Windsurf's memories system.
